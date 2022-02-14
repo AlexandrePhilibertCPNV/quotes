@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 
+import 'package:quotes/managers/quote_manager.dart';
 import 'package:quotes/screens/home.dart';
 
+GetIt getIt = GetIt.instance;
+
 void main() {
+  QuoteManager.register();
+
   runApp(const App());
 }
 
@@ -16,7 +22,7 @@ class App extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const HomeScreen(title: 'Home'),
+      home: HomeScreen(),
     );
   }
 }

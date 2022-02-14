@@ -1,49 +1,19 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:get_it_mixin/get_it_mixin.dart';
+import 'package:quotes/managers/quote_manager.dart';
+import 'package:quotes/models/quote.dart';
 
-import 'package:quotes/models/quotes.dart';
-
-Future<Quote> fetchQuote() async {
-  final response = await http.get(Uri.parse('https://api.quotable.io/random'));
-
-  if (response.statusCode == 200) {
-    return Quote.fromJson(jsonDecode(response.body));
-  } else {
-    throw Exception('Failed to load quote');
-  }
-}
-
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key, required this.title}) : super(key: key);
-
-  final String title;
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  late Future<Quote> quote;
-
-  void _fetchQuote() {
-    setState(() {
-      quote = fetchQuote();
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    _fetchQuote();
-  }
+class HomeScreen extends StatelessWidget with GetItMixin {
+  HomeScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    AsyncSnapshot<Quote> quote =
+        watchStream((QuoteManager m) => m.stream, Quote.none());
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: const Text("Quote"),
       ),
       body: Center(
         child: Padding(
@@ -51,22 +21,15 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              FutureBuilder<Quote>(
-                future: quote,
-                builder: (ctx, snapshot) {
-                  if (snapshot.hasData) {
-                    return Text(snapshot.data!.content);
-                  } else {
-                    return const CircularProgressIndicator();
-                  }
-                },
-              ),
+              quote.hasData
+                  ? Text(quote.data!.body)
+                  : const CircularProgressIndicator(),
             ],
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _fetchQuote,
+        onPressed: QuoteManager.instance.next,
         tooltip: 'New Quote',
         child: const Icon(Icons.refresh),
       ),
